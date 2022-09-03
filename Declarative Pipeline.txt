@@ -1,0 +1,45 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContinuousDownload')
+        {
+            steps
+            {
+                git 'https://github.com/NeneDreams/maven.git'
+            }
+        }
+        stage('ContinuousBuild')
+        {
+            steps
+            {
+                sh 'mvn package'
+            }
+        }
+        stage('ContinuousDeployment')
+        {
+            steps
+            {
+                deploy adapters: [tomcat9(credentialsId: 'd6879646-8da1-4f5d-88af-8cedd3d7619a', path: '', url: 'http://172.31.17.228:8080')], contextPath: 'testapp', war: '**/*.war'
+            }
+        }
+        stage('ContinuousTesting')
+        {
+            steps
+            {
+                    git 'https://github.com/NeneDreams/Selenium.git'
+                    sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipeline/testing.jar'
+            }
+        }
+        stage('ContinuousDelivery')
+        {
+            steps
+            {
+                input message: 'waiting approval from MD!', submitter: 'robert'
+               deploy adapters: [tomcat9(credentialsId: 'd6879646-8da1-4f5d-88af-8cedd3d7619a', path: '', url: 'http://172.31.19.155:8080')], contextPath: 'prodapp', war: '**/*.war' 
+            }
+        }
+            
+    }
+}
